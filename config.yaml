@@ -1,0 +1,112 @@
+Service:
+  RegionId: cn-hangzhou
+  DeployType: ros
+  DeployMetadata:
+    SupplierDeployMetadata:
+      ArtifactRelation:
+        centos_7:
+          ArtifactId: ${Artifact.Artifact_1.ArtifactId}
+          ArtifactVersion: ${Artifact.Artifact_1.ArtifactVersion}
+    TemplateConfigs:
+      - Name: 模板1
+        Url: 'templates/template.yaml'
+        AllowedRegions:
+          - ap-southeast-1
+  ServiceType: private
+  ServiceInfo:
+    Locale: zh-CN
+    ShortDescription: 通义千问-开源大模型-14B快速部署
+    Image: 'icons/service_logo.png'
+    Name: 通义千问-开源大模型
+  ShareType: Public
+  ApprovalType: Manual
+Artifact:
+  Artifact_1:
+    ArtifactType: EcsImage
+    ArtifactName: tongyi-14b
+    Description: tongyi-14b部署
+    ArtifactProperty:
+      RegionId: ${ImageBuilder.Image_1.RegionId}
+      ImageId: ${ImageBuilder.Image_1.SourceImageId}
+    SupportRegionIds:
+      - ap-southeast-1
+ImageBuilder:
+  Image_1:
+    RegionId: ap-southeast-1
+    SourceImageId: '{{oos:aliyun/services/computenest/images/centos_7_6_gpu_base}}'
+    InstanceType: ecs.gn6i-c4g1.xlarge
+    InternetMaxBandwidthOut: 5
+    CommandType: RunShellScript
+    Timeout: 10800
+    Tags: []
+    CommandContent: |-
+      #!/bin/bash
+
+
+      # openssl
+      wget https://www.openssl.org/source/openssl-1.1.1n.tar.gz --no-check-certificate
+      tar -zxvf openssl-1.1.1n.tar.gz
+      cd openssl-1.1.1n
+      ./config --prefix=/usr/local/openssl
+      make -j && make install
+      openssl version
+      ln -s /usr/local/openssl/bin/openssl /usr/bin/openssl
+      sudo ldconfig
+      export LD_LIBRARY_PATH=/usr/local/openssl/lib:$LD_LIBRARY_PATH
+      cd .. && rm -rf openssl-1.1.1n.tar.gz
+
+      # 安装python3.8.6
+
+      cd /usr/local/
+      wget https://www.python.org/ftp/python/3.8.6/Python-3.8.6.tgz --no-check-certificate
+      tar -zxvf Python-3.8.6.tgz && rm -f Python-3.8.6.tgz
+      cd /usr/local/Python-3.8.6/
+      ./configure --prefix=/usr/local/python3 --with-openssl=/usr/local/openssl --with-openssl-rpath=auto
+      yum install -y libffi-devel zlib zlib-devel bzip2-devel
+      yum install -y xz-devel
+      yum install -y python-backports-lzma
+      yum install -y lzma
+      yum install -y libX11
+      yum install -y libXext
+      make && make install
+
+      echo 'export PATH="/usr/local/python3/bin:$PATH"' >> /root/.bashrc
+      source /root/.bashrc
+
+      # 安装git
+      yum install -y https://packages.endpointdev.com/rhel/7/os/x86_64/endpoint-repo.x86_64.rpm
+      yum install -y git
+
+      # 安装tongyi
+      cd /root
+      git clone https://www.modelscope.cn/studios/qwen/Qwen-14B-Chat-Demo.git
+
+      # 依赖环境
+      pip3 install gradio
+      pip3 install torch
+      pip3 install modelscope
+      pip3 install transformers
+      pip3 install tiktoken
+      pip3 install transformers_stream_generator
+      pip3 install accelerate
+
+      # 启动预下载模型
+      mkdir -p /root/.cache/modelscope/hub/qwen
+      wget https://computenest-data-ap-southeast-1.oss-ap-southeast-1-internal.aliyuncs.com/qwen/Qwen-14B-Chat.tar
+      tar xvf Qwen-14B-Chat.tar && mv Qwen-14B-Chat  /root/.cache/modelscope/hub/qwen/
+
+
+      cd Qwen-14B-Chat-Demo
+      python3 app.py > /var/log/app.log &
+
+      for ((i=0;i<1000;i++))
+      do
+         curl 127.0.0.1:7860 > /tmp/health_check
+         if [ "$?" == 0 ]
+         then
+           break
+         fi
+         sleep 10
+      done
+
+      # 退出
