@@ -253,6 +253,7 @@ Resources:
           # 可以在后续的步骤中通过conf.txt里的内容完成slave的初始化
           - |
             #!/bin/bash
+            source /root/.bashrc
             cat > /lib/systemd/system/tongyi.service << "EOF"
             [Unit]
             Description=TongYi Model App
