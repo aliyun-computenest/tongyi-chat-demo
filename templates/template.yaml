@@ -260,7 +260,7 @@ Resources:
             After=network-online.target
             Wants=network-online.target
             [Service]
-            ExecStart=/bin/bash -c "cd /root/Qwen-14B-Chat-Demo && python3 app.py"
+            ExecStart=/bin/bash -c "source /root/.bashrc && cd /root/Qwen-14B-Chat-Demo && python3 app.py"
             Restart=on-abnormal
             LimitNOFILE=60000
             TimeoutSec=120
