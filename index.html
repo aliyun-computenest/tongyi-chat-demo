@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="计算巢是阿里云开放给企业应用服务商的服务管理平台。服务商能够在计算巢上发布私有化部署服务，为其客户提供云上软件一键部署的能力；同时也支持全托管模式的服务，赋能服务商托管其客户资源。">
+  <title>服务模版说明文档 - Aliyun 计算巢 x Demo</title>
+
+  <link rel="shortcut icon" href="img/favicon.ico">
+
+  <link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css">
+  <link rel="stylesheet" href="css/theme.css">
+  
+
+  
+
+  
+  
+
+  
+    <script src="search/main.js"></script>
+  
+
+  
+
+  <script src="js/highlight.min.js"></script>
+  <script>hljs.highlightAll();</script>
+</head>
+
+<body>
+  <div class="container">
+    <div class="nav">
+      <div class="nav-inner">
+        <div class="logo">
+          <img src="./img/logo-2x.png">
+        </div>
+        <div class="nav-list">
+          <ul>
+          
+              <li><a href="#_1">服务模版说明文档</a></li>
+              
+                  <li><a href="#_2">服务说明</a></li>
+                  
+              
+                  <li><a href="#_3">部署架构</a></li>
+                  
+              
+                  <li><a href="#_4">服务构建计费说明</a></li>
+                  
+              
+                  <li><a href="#ram">RAM账号所需权限</a></li>
+                  
+              
+                  <li><a href="#_5">服务实例计费说明</a></li>
+                  
+              
+                  <li><a href="#_6">部署流程</a></li>
+                  
+                      <li class="li-h3"><a href="#_7">部署参数说明</a></li>
+                  
+                      <li class="li-h3"><a href="#_8">部署步骤</a></li>
+                  
+              
+                  <li><a href="#_9">服务详细说明</a></li>
+                  
+              
+                  <li><a href="#_10">其他说明</a></li>
+                  
+              
+          
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="content theme-github">
+      
+      <div class="content-inner">        
+        
+        <h1 id="_1">服务模版说明文档</h1>
+<h2 id="_2">服务说明</h2>
+<p>本文介绍基于通义单机gpu实例ecs服务快速上手流程，本示例对应的<a href="https://github.com/aliyun-computenest/tongyi-chat-demo">git地址</a></p>
+<p>本示例会自动的构建计算巢服务，具体的服务构建流程为
+1. OOS ACS-ECS-UpdateImage模版执行命令构建ecs镜像
+2. 通过构建好的ecs镜像创建ECS镜像部署物并完成分发
+3. 创建计算巢服务并关联镜像部署物</p>
+<p>创建过程大约持续50分钟，当服务变成待提交后构建成功</p>
+<h2 id="_3">部署架构</h2>
+<p>本部署架构为单机ecs部署，通过公网ip 8080端口访问
+<img src="architecture.png" width="1500" height="700" align="bottom"/></p>
+<h2 id="_4">服务构建计费说明</h2>
+<p>测试本服务构建需要支付构建镜像过程中的ECS费用，请确保账号中有足够的余额，创建服务实例涉及的费用参考服务实例计费说明</p>
+<h2 id="ram">RAM账号所需权限</h2>
+<p>本服务需要对ECS、VPC等资源进行访问和创建操作，若您使用RAM用户创建服务实例，需要在创建服务实例前，对使用的RAM用户的账号添加相应资源的权限。添加RAM权限的详细操作，请参见<a href="https://help.aliyun.com/document_detail/121945.html">为RAM用户授权</a>。所需权限如下表所示。</p>
+<table>
+<thead>
+<tr>
+<th>权限策略名称</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>AliyunECSFullAccess</td>
+<td>管理云服务器服务（ECS）的权限</td>
+</tr>
+<tr>
+<td>AliyunVPCFullAccess</td>
+<td>管理专有网络（VPC）的权限</td>
+</tr>
+<tr>
+<td>AliyunROSFullAccess</td>
+<td>管理资源编排服务（ROS）的权限</td>
+</tr>
+<tr>
+<td>AliyunComputeNestUserFullAccess</td>
+<td>管理计算巢服务（ComputeNest）的用户侧权限</td>
+</tr>
+<tr>
+<td>AliyunComputeNestSupplierFullAccess</td>
+<td>管理计算巢服务（ComputeNest）的服务商侧权限 ｜</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_5">服务实例计费说明</h2>
+<p>测试本服务在计算巢上的费用主要涉及：</p>
+<ul>
+<li>所选vCPU与内存规格</li>
+<li>系统盘类型及容量</li>
+<li>公网带宽</li>
+</ul>
+<p>计费方式包括：</p>
+<ul>
+<li>按量付费（小时）</li>
+<li>包年包月
+预估费用在创建实例时可实时看到。</li>
+</ul>
+<h2 id="_6">部署流程</h2>
+<h3 id="_7">部署参数说明</h3>
+<pre><code>| 参数组 | 参数项 | 示例 | 说明 |
+| --- | --- | --- | --- |
+| 服务实例名称 |  | test | 实例的名称 |
+| 地域 | 部署地域 | 新加坡 | 选中服务实例的地域，因为一些模型在国内无法下载访问，建议选择中国香港或海外地域 |
+| 可用区配置 | 部署区域 | 可用区I | 地域下的不同可用区域 |
+| 付费类型配置 | 付费类型 | 按量付费 或 包年包月 |  |
+| ECS实例配置 | 实例类型 | ecs.gn6i-c4g1.xlarge | 实例规格，可以根据实际需求选择 |
+| ECS实例配置 | 实例密码 |  | 设置实例密码。长度8，30个字符，必须包含三项（大写字母、小写字母、数字、()`!@#$%^&amp;*-+={}[]:;'&lt;&gt;,.?/ 中的特殊符号） |
+| 登录信息 | 软件登录名 | admin | 设置软件登录名，默认为admin |
+| 登录信息 | 软件登录名密码 |  | 设置软件登录密码 |
+| 网络配置 | 专有网络IPv4网段 | 192.168.0.0/16 | VPC的ip地址段范围 |
+| 网络配置 | 交换机子网网段 | 192.168.0.0/24 | 交换机子网网段 |                                                       |
+</code></pre>
+<h3 id="_8">部署步骤</h3>
+<ol>
+<li>
+<p>登录阿里云计算巢控制台找到对应的服务点部署链接进入部署
+    <img alt="image.png" src="1.png" />
+    <img alt="image.png" src="2.png" /></p>
+</li>
+<li>
+<p>勾选我已阅读并同意《计算巢服务协议》，点击"立即创建"按钮。
+   <img alt="image.png" src="3.png" />
+   <img alt="image.png" src="4.png" /></p>
+</li>
+<li>
+<p>查看部署进度。 点击去列表页查看，可以看到刚刚创建的服务实例以及服务部署进度。
+    <img alt="image.png" src="5.png" /></p>
+</li>
+<li>
+<p>访问等待状态变为"已部署"后，点击详情，进入对应的服务实例后，可以在页面上获取Endpoint以访问服务。
+    <img alt="image.png" src="6.png" /></p>
+</li>
+<li>
+<p>点击Endpoint后面的链接，输入第1步设置的软件登录名及密码。
+    <img alt="image.png" src="7.png" /></p>
+</li>
+<li>
+<p>完成验证后即可访问：
+    <img alt="image.png" src="8.png" /></p>
+</li>
+</ol>
+<h2 id="_9">服务详细说明</h2>
+<p>基于ecs镜像的部署流程详细参见springboot ecs单机版构建，本文只介绍gpu和软件构建的具体步骤</p>
+<ol>
+<li>ecs构建基于gpu镜像执行命令 安装基础环境和git下载软件，配置在config.yaml中</li>
+</ol>
+<pre><code class="language-bash">      # openssl
+      wget https://www.openssl.org/source/openssl-1.1.1n.tar.gz --no-check-certificate
+      tar -zxvf openssl-1.1.1n.tar.gz
+      cd openssl-1.1.1n
+      ./config --prefix=/usr/local/openssl
+      make -j &amp;&amp; make install
+      openssl version
+      ln -s /usr/local/openssl/bin/openssl /usr/bin/openssl
+      sudo ldconfig
+      export LD_LIBRARY_PATH=/usr/local/openssl/lib:$LD_LIBRARY_PATH
+      cd .. &amp;&amp; rm -rf openssl-1.1.1n.tar.gz
+
+      # 安装python3.8.6
+
+      cd /usr/local/
+      wget https://www.python.org/ftp/python/3.8.6/Python-3.8.6.tgz --no-check-certificate
+      tar -zxvf Python-3.8.6.tgz &amp;&amp; rm -f Python-3.8.6.tgz
+      cd /usr/local/Python-3.8.6/
+      ./configure --prefix=/usr/local/python3 --with-openssl=/usr/local/openssl --with-openssl-rpath=auto
+      yum install -y libffi-devel zlib zlib-devel bzip2-devel
+      yum install -y xz-devel
+      yum install -y python-backports-lzma
+      yum install -y lzma
+      yum install -y libX11
+      yum install -y libXext
+      make &amp;&amp; make install
+
+      echo 'export PATH=&quot;/usr/local/python3/bin:$PATH&quot;' &gt;&gt; /root/.bashrc
+      source /root/.bashrc
+
+      # 安装git
+      yum install -y https://packages.endpointdev.com/rhel/7/os/x86_64/endpoint-repo.x86_64.rpm
+      yum install -y git
+
+      # 安装tongyi
+      cd /root
+      git clone https://www.modelscope.cn/studios/qwen/Qwen-14B-Chat-Demo.git
+
+      # 依赖环境
+      pip3 install gradio
+      pip3 install torch
+      pip3 install modelscope
+      pip3 install transformers
+      pip3 install tiktoken
+      pip3 install transformers_stream_generator
+      pip3 install accelerate
+
+      # 启动预下载模型
+      mkdir -p /root/.cache/modelscope/hub/qwen
+      wget https://computenest-data-ap-southeast-1.oss-ap-southeast-1-internal.aliyuncs.com/qwen/Qwen-14B-Chat.tar
+      tar xvf Qwen-14B-Chat.tar &amp;&amp; mv Qwen-14B-Chat  /root/.cache/modelscope/hub/qwen/
+
+
+      cd Qwen-14B-Chat-Demo
+      python3 app.py &gt; /var/log/app.log &amp;
+
+      for ((i=0;i&lt;1000;i++))
+      do
+         curl 127.0.0.1:7860 &gt; /tmp/health_check
+         if [ &quot;$?&quot; == 0 ]
+         then
+           break
+         fi
+         sleep 10
+      done
+</code></pre>
+<ol>
+<li>在template.yaml配置软件启动时根据UserName和Password配置systemctl并给nginx配置账号密码放到/etc/nginx/password中，最终通过systemctl拉起tongyi服务</li>
+</ol>
+<pre><code class="language-yaml">  CommandContent:
+    Fn::Sub:
+      # 将master的ip输入到/root/conf.txt
+      # 可以在后续的步骤中通过conf.txt里的内容完成slave的初始化
+      - |
+        #!/bin/bash
+        cat &gt; /lib/systemd/system/tongyi.service &lt;&lt; &quot;EOF&quot;
+        [Unit]
+        Description=TongYi Model App
+        After=network-online.target
+        Wants=network-online.target
+        [Service]
+        ExecStart=/bin/bash -c &quot;cd /root/Qwen-14B-Chat-Demo &amp;&amp; python3 app.py&quot;
+        Restart=on-abnormal
+        LimitNOFILE=60000
+        TimeoutSec=120
+        [Install]
+        WantedBy=multi-user.target
+        EOF
+
+        cat &gt; /etc/nginx/conf.d/5000.conf &lt;&lt;&quot;EOF&quot;
+        server {
+            listen       5000;
+            server_name  _;
+            root         /usr/share/nginx/html;
+
+            # Load configuration files for the default server block.
+            include /etc/nginx/default.d/*.conf;
+
+            auth_basic &quot;请输入用户和密码&quot;; # 验证时的提示信息
+            auth_basic_user_file /etc/nginx/password; # 认证文件
+
+            location / {
+            proxy_pass http://127.0.0.1:7860/;
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection Upgrade;
+          }
+            error_page 404 /404.html;
+            location = /404.html {
+          }
+
+            error_page 500 502 503 504 /50x.html;
+            location = /50x.html {
+          }
+        }
+        EOF
+
+        systemctl daemon-reload
+        systemctl enable tongyi
+        systemctl start tongyi
+        systemctl status tongyi
+
+        for ((i=0;i&lt;1000;i++))
+        do
+           curl 127.0.0.1:7860
+           if [ &quot;$?&quot; == 0 ]
+           then
+             break
+           fi
+           sleep 10
+        done
+        htpasswd -bc /etc/nginx/password ${UserName} '${Password}'
+        systemctl start nginx
+        systemctl status nginx
+        systemctl enable nginx
+        # 执行成功回调WaitCondition结束waitCondition的等待
+        ${CurlCli} -d &quot;{\&quot;Data\&quot; : \&quot;Success\&quot;, \&quot;status\&quot; : \&quot;SUCCESS\&quot;}&quot;
+      - UserName:
+          Ref: UserName
+        Password:
+          Ref: Password
+        # 获取到waitConditionHandle的地址放到 ${CurlCli}变量里
+        CurlCli:
+          Fn::GetAtt:
+            - WaitConditionHandle
+            - CurlCli
+</code></pre>
+<h2 id="_10">其他说明</h2>
+<p><a href="https://www.modelscope.cn/studios/qwen/Qwen-14B-Chat-Demo">实例代码源地址</a></p>
+        
+      </div>
+
+      <div class="copyrights">© 2009-2022 Aliyun.com 版权所有</div>
+    </div>
+  </div>
+  
+  <!--
+  MkDocs version      : 1.5.3
+  Docs Build Date UTC : 2023-11-09 11:53:29.226759+00:00
+  -->
+</body>
+</html>
